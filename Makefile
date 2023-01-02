@@ -1,3 +1,9 @@
+.DEFAULT_GOAL := all
+.PHONY: all build run run-naked clean
+
+
+all: build run
+
 build: Dockerfile
 	docker build -t ansible .
 run:

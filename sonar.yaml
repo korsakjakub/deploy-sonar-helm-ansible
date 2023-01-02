@@ -22,7 +22,7 @@
       register: podname
     - name: Print Pod name
       debug:
-        msg: "The sonar pod name is: {{ podname.stdout }}"
+        msg: "run: kubectl port-forward -n {{ namespace }} {{ podname.stdout }} 8080:9000"
 #   - name: Port forwarding
 #     ansible.builtin.shell:
 #       cmd: "kubectl port-forward -n {{ namespace }} {{ podname.stdout }} 8080:9000 &"
