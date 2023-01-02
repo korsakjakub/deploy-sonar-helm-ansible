@@ -1,0 +1,2 @@
+[host]
+127.0.0.1 ansible_user=user ansible_ssh_private_key_file=/ansible/keys/id_rsa

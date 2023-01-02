@@ -1,0 +1,28 @@
+---
+- hosts: host
+  environment:
+    KUBECONFIG: "/etc/rancher/k3s/k3s.yaml"
+  vars:
+    helm_chart_url: "https://SonarSource.github.io/helm-chart-sonarqube"
+    namespace: sonarqube
+  tasks:
+    - name: Add helm repo
+      kubernetes.core.helm_repository:
+        name: sonarqube
+        repo_url: "{{ helm_chart_url }}"
+    - name: Install Sonar Chart
+      kubernetes.core.helm:
+        name: sonarqube
+        namespace: "{{ namespace }}"
+        chart_ref: sonarqube/sonarqube
+    - name: Wait for pods to become ready
+      shell: "kubectl wait pod --all -n {{ namespace }} --timeout=3m --for=condition=ready --field-selector=status.phase!=Succeeded"
+    - name: Get Pod name
+      shell: 'kubectl get pods --namespace {{ namespace }} -l "app=sonarqube,release=sonarqube" -o jsonpath="{.items[0].metadata.name}"'
+      register: podname
+    - name: Print Pod name
+      debug:
+        msg: "The sonar pod name is: {{ podname.stdout }}"
+#   - name: Port forwarding
+#     ansible.builtin.shell:
+#       cmd: "kubectl port-forward -n {{ namespace }} {{ podname.stdout }} 8080:9000 &"
