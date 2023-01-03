@@ -12,5 +12,11 @@ run:
 run-naked:
 	docker run --rm -it --network host -v $${PWD}:/ansible ansible
 
+build-k3s:
+	curl -sfL https://get.k3s.io | sh -
+
+clean-k3s:
+	/usr/local/bin/k3s-uninstall.sh
+
 clean:
 	helm -n sonarqube uninstall sonarqube; pkill kubectl

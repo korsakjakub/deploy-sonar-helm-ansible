@@ -4,25 +4,41 @@
     KUBECONFIG: "/etc/rancher/k3s/k3s.yaml"
   vars:
     helm_chart_url: "https://SonarSource.github.io/helm-chart-sonarqube"
-    namespace: sonarqube
+    ns: sonarqube
   tasks:
+    - name: Install pip packages on target
+      pip:
+        name:
+          - kubernetes
+
+    - name: Create the sonar namespace
+      kubernetes.core.k8s:
+        name: "{{ ns }}"
+        api_version: v1
+        kind: Namespace
+        state: present
+
     - name: Add helm repo
       kubernetes.core.helm_repository:
         name: sonarqube
         repo_url: "{{ helm_chart_url }}"
+
     - name: Install Sonar Chart
       kubernetes.core.helm:
         name: sonarqube
-        namespace: "{{ namespace }}"
+        namespace: "{{ ns }}"
         chart_ref: sonarqube/sonarqube
+
     - name: Wait for pods to become ready
-      shell: "kubectl wait pod --all -n {{ namespace }} --timeout=3m --for=condition=ready --field-selector=status.phase!=Succeeded"
+      shell: "kubectl wait pod --all -n {{ ns }} --timeout=3m --for=condition=ready --field-selector=status.phase!=Succeeded"
+
     - name: Get Pod name
-      shell: 'kubectl get pods --namespace {{ namespace }} -l "app=sonarqube,release=sonarqube" -o jsonpath="{.items[0].metadata.name}"'
+      shell: 'kubectl get pods --namespace {{ ns }} -l "app=sonarqube,release=sonarqube" -o jsonpath="{.items[0].metadata.name}"'
       register: podname
+
     - name: Print Pod name
       debug:
-        msg: "run: kubectl port-forward -n {{ namespace }} {{ podname.stdout }} 8080:9000"
+        msg: "run: kubectl port-forward -n {{ ns }} {{ podname.stdout }} 8080:9000"
+
 #   - name: Port forwarding
-#     ansible.builtin.shell:
-#       cmd: "kubectl port-forward -n {{ namespace }} {{ podname.stdout }} 8080:9000 &"
+#     shell: "kubectl port-forward -n {{ ns }} {{ podname.stdout }} 8080:9000 &"
